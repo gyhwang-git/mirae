@@ -149,7 +149,7 @@ Promise.all(['data/land.geojson','data/sigungu.geojson','data/industrial_zones.g
   const showStn = () => map.getZoom() >= 11 ? stnLayer.addTo(map) : stnLayer.remove();
   map.on('zoomend', showStn); showStn();
   put([37.3270,127.0700], `<div class="line-tag" style="color:${RAIL['신분당선']}">신분당선</div>`);
-  put([37.2050,126.9150], `<div class="line-tag" style="color:#c99600">수인분당선</div>`);
+  put([37.2487,126.9200], `<div class="line-tag" style="color:#c99600;transform:translate(-50%,5px)">수인분당선</div>`);  // 오목천–어천 구간 바로 아래
 
   // 고속도로 이름 — 지도 범위 안 구간의 가운데 지점
   const view = L.latLngBounds([[37.00,126.66],[37.50,127.33]]);
