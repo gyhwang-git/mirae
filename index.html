@@ -35,14 +35,19 @@
   .cx small{display:block;font-size:9.5px;font-weight:500;color:#7b8796}
   .hwy{transform:translate(-50%,-50%);white-space:nowrap;font-size:10.5px;font-weight:600;color:#5b6676;background:#fff;border:1px solid #c3ccd6;border-radius:9px;padding:1px 7px}
   .line-tag{transform:translate(-50%,-50%);white-space:nowrap;font-size:13px;font-weight:800;letter-spacing:-.3px;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 5px #fff,0 0 6px #fff}
+  .uni-dot{width:10px;height:10px;border-radius:50%;background:#ea6a12;border:2px solid #fff;transform:translate(-50%,-50%);box-shadow:0 0 0 1px rgba(0,0,0,.2)}
+  .lbl.uni .nm{font-size:12.5px;font-weight:700;color:#18212d}
+  .lbl.uni .sub{font-size:10px;color:#6b7787}
+  .lbl.uni.r{transform:translate(9px,-50%)} .lbl.uni.l{transform:translate(calc(-100% - 9px),-50%)}
+  .lbl.uni.t{transform:translate(-50%,calc(-100% - 8px))} .lbl.uni.b{transform:translate(-50%,8px)}
   .grp{transform:translate(-50%,-50%);white-space:nowrap;font-size:17px;font-weight:800;letter-spacing:-.5px;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 5px #fff}
   .gu{transform:translate(-50%,-50%);white-space:nowrap;font-size:11.5px;font-weight:600;color:#5b4a1e;letter-spacing:1px;text-shadow:0 0 3px #fff,0 0 3px #fff}
   .pole{transform:translate(-50%,-50%);text-align:center;white-space:nowrap}
   .pole .t1{display:inline-block;font-size:16px;font-weight:800;padding:4px 12px;border-radius:3px;color:#fff;margin-bottom:3px}
   .pole .t2{display:block;font-size:19px;font-weight:800;letter-spacing:-.5px;margin-top:2px;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff,0 0 8px #fff}
 
-  .hub{display:flex;align-items:flex-start;transform:translate(calc(-100% - 12px),-11px)}
-  .hub .box{border-top-right-radius:0}
+  .hub{display:flex;align-items:flex-end;transform:translate(calc(-100% - 12px),calc(-100% + 11px))}
+  .hub .box{border-bottom-right-radius:0}
   .hub .box{background:var(--red);color:#fff;font-weight:800;font-size:16px;padding:7px 12px;border-radius:3px;white-space:nowrap;box-shadow:0 4px 14px rgba(196,22,28,.3)}
   .hub .box small{display:block;font-size:11px;font-weight:600;opacity:.92;margin-top:2px}
   .hub .arrow{width:0;height:0;border-top:11px solid transparent;border-bottom:11px solid transparent;border-left:16px solid var(--red)}
@@ -88,6 +93,7 @@
     <div><span class="sw" style="background:var(--hub)"></span>R&amp;D·지식서비스 (수원)</div>
     <div><span class="sw" style="border:1.5px dashed var(--semi)"></span>반도체 클러스터 조성 예정지</div>
     <div><span class="sw" style="border:1px dashed #5b6676"></span>산업단지 경계 · 이름 (확대하면 더 표시)</div>
+    <div><span class="sw" style="width:11px;height:11px;margin:0 2.5px;border-radius:50%;background:#ea6a12"></span>대학 (수원시)</div>
     <div><span class="ln" style="border-top:3px dotted var(--red)"></span>수원 연계축 (제안)</div>
     <div><span class="ln" style="border-top:3.5px solid #f2b600"></span>수인분당선</div>
     <div><span class="ln" style="border-top:3.5px solid #b0174a"></span>신분당선</div>
@@ -247,6 +253,19 @@ const SITES = [
 SITES.forEach(s => {
   put(s.ll, `<div class="dot" style="background:${s.col}"></div>`);
   put(s.ll, `<div class="lbl ${s.pos}">${s.cat?`<span class="cat">${s.cat}</span>`:''}<span class="nm" style="color:${s.col}">${s.nm}</span>${s.sub?`<span class="sub">${s.sub}</span>`:''}</div>`);
+});
+
+// 수원시 내 대학 (VWorld 장소 검색 좌표)
+const UNIS = [
+  {ll:[37.2959,126.9779], nm:'성균관대', sub:'자연과학캠퍼스', pos:'t'},
+  {ll:[37.2982,126.9871], nm:'동남보건대', sub:'', pos:'r'},
+  {ll:[37.3015,127.0370], nm:'경기대', sub:'수원캠퍼스', pos:'t'},
+  {ll:[37.2832,127.0458], nm:'아주대', sub:'', pos:'r'},
+  {ll:[37.2523,126.9636], nm:'수원여대', sub:'', pos:'b'},
+];
+UNIS.forEach(u => {
+  put(u.ll, '<div class="uni-dot"></div>');
+  put(u.ll, `<div class="lbl uni ${u.pos}"><span class="nm">${u.nm}</span>${u.sub?`<span class="sub">${u.sub}</span>`:''}</div>`);
 });
 
 // 판교 세 지구를 묶는 상단 라벨
