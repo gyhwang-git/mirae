@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>수원, AI 삼각 산업벨트의 연계거점</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --sw:#b294ff;   /* 판교 소프트웨어·팹리스 */
+    --semi:#3f9bff; /* 경부축 반도체 */
+    --mfg:#2fd4b8;  /* 서해안 제조업 */
+    --hub:#ffc64a;  /* 수원 R&D·지식서비스 */
+    --red:#e8473c;  /* 제안 거점 */
+    --ink:#eef2f7; --mute:#9aa8ba; --bg:#0b1119;
+  }
+  html,body{margin:0;height:100%;background:var(--bg);font-family:Pretendard,"Malgun Gothic",sans-serif;color:var(--ink)}
+  #map{position:absolute;inset:0;background:var(--bg)}
+  .leaflet-container{font-family:inherit;background:var(--bg)}
+  /* 배경지도 톤다운 — 예시 이미지처럼 어두운 위성 */
+  .base-sat{filter:grayscale(.55) saturate(.6) brightness(.42) contrast(1.15)}
+  .base-osm{filter:invert(1) grayscale(1) brightness(.72) contrast(.95)}
+  .leaflet-tile-pane::after{content:"";position:absolute;inset:-5000px;background:rgba(10,24,44,.28);pointer-events:none}
+
+  /* 지점 라벨 */
+  .lbl{position:relative;white-space:nowrap;pointer-events:auto;line-height:1.15;text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.85)}
+  .lbl .cat{display:block;font-size:11px;color:var(--mute);font-weight:500;letter-spacing:-.2px}
+  .lbl .nm{display:block;font-size:15px;font-weight:700;letter-spacing:-.4px}
+  .lbl .sub{display:block;font-size:11px;color:#c9d3df;font-weight:500}
+  .lbl.r{transform:translate(12px,-50%)} .lbl.l{transform:translate(calc(-100% - 12px),-50%);text-align:right}
+  .lbl.t{transform:translate(-50%,calc(-100% - 12px));text-align:center} .lbl.b{transform:translate(-50%,12px);text-align:center}
+  .dot{width:10px;height:10px;border-radius:50%;border:2px solid #fff;transform:translate(-50%,-50%);box-shadow:0 0 10px currentColor}
+  .city{font-size:12px;color:rgba(255,255,255,.55);font-weight:600;transform:translate(-50%,-50%);white-space:nowrap;text-shadow:0 1px 3px #000}
+  .city.suwon{font-size:17px;color:#fff;letter-spacing:2px}
+  .pole{transform:translate(-50%,-50%);text-align:center;white-space:nowrap;text-shadow:0 1px 4px #000,0 0 12px rgba(0,0,0,.9)}
+  .pole .t1{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:3px;color:#0b1119;margin-bottom:3px}
+  .pole .t2{display:block;font-size:12px;color:#dfe6ee;font-weight:500}
+
+  /* 제안 거점 */
+  .hub{transform:translate(-50%,-100%);text-align:center}
+  .hub .box{background:var(--red);color:#fff;font-weight:800;font-size:16px;padding:7px 12px;border-radius:3px;white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.6)}
+  .hub .box small{display:block;font-size:11px;font-weight:600;opacity:.9;margin-top:2px}
+  .hub .arrow{width:0;height:0;margin:0 auto;border-left:12px solid transparent;border-right:12px solid transparent;border-top:20px solid var(--red)}
+  .pulse{width:16px;height:16px;border-radius:50%;background:var(--red);transform:translate(-50%,-50%);box-shadow:0 0 0 0 rgba(232,71,60,.7);animation:pulse 2s infinite}
+  @keyframes pulse{70%{box-shadow:0 0 0 22px rgba(232,71,60,0)}100%{box-shadow:0 0 0 0 rgba(232,71,60,0)}}
+  .flow{stroke-dasharray:2 12;animation:flow 1.2s linear infinite}
+  @keyframes flow{to{stroke-dashoffset:-28}}
+  @media (prefers-reduced-motion:reduce){.pulse,.flow{animation:none}}
+
+  /* 패널 */
+  .panel{position:absolute;z-index:1000;left:18px;top:18px;width:330px;max-height:calc(100% - 36px);overflow:auto;background:rgba(11,17,25,.86);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:18px 20px;box-sizing:border-box}
+  .panel h1{margin:0 0 4px;font-size:20px;letter-spacing:-.6px;line-height:1.3}
+  .panel h1 em{font-style:normal;color:var(--red)}
+  .panel .lead{margin:0 0 14px;font-size:12.5px;color:var(--mute);line-height:1.55}
+  .panel ol{margin:0 0 14px;padding:0;list-style:none;counter-reset:n}
+  .panel li{counter-increment:n;position:relative;padding-left:24px;margin-bottom:9px;font-size:12.5px;line-height:1.55;color:#d5dde7}
+  .panel li::before{content:counter(n);position:absolute;left:0;top:1px;width:17px;height:17px;border-radius:50%;background:rgba(255,255,255,.12);font-size:11px;font-weight:700;text-align:center;line-height:17px}
+  .panel li b{color:#fff}
+  .legend{border-top:1px solid rgba(255,255,255,.1);padding-top:12px;display:grid;gap:6px;font-size:12px;color:#d5dde7}
+  .legend div{display:flex;align-items:center;gap:8px}
+  .sw{width:16px;height:11px;border-radius:2px;flex:none}
+  .ln{width:22px;height:0;flex:none}
+  .src{margin-top:12px;font-size:10.5px;color:#6f7d8f;line-height:1.5}
+  .toggle{position:absolute;z-index:1000;right:14px;top:14px;display:flex;background:rgba(11,17,25,.86);border:1px solid rgba(255,255,255,.1);border-radius:5px;overflow:hidden}
+  .toggle button{all:unset;cursor:pointer;font-size:12px;padding:6px 10px;color:var(--mute)}
+  .toggle button[aria-pressed=true]{background:rgba(255,255,255,.12);color:#fff}
+  .leaflet-control-attribution{background:rgba(11,17,25,.7)!important;color:#7d8a9b!important;font-size:10px}
+  .leaflet-control-attribution a{color:#9fb0c4!important}
+  @media (max-width:700px){.panel{width:auto;right:12px;left:12px;top:auto;bottom:12px;max-height:42%}}
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<aside class="panel">
+  <h1>수원, AI 삼각 산업벨트의<br><em>연계거점</em></h1>
+  <p class="lead">AI를 만드는 곳, 반도체를 만드는 곳, AI를 쓸 제조현장이 수원을 둘러싸고 있지만 서로 떨어져 있습니다.</p>
+  <ol>
+    <li><b>삼각 산업벨트의 한가운데</b> — 판교의 소프트웨어·팹리스, 경부축 반도체 생산기지(기흥·화성·평택·용인), 서해안 제조업 집적지(반월·시화)를 잇는 위치</li>
+    <li><b>경기 남부의 연구·서비스 기반</b> — 삼성전자 수원 디지털시티를 비롯해 지식기반서비스업 종사자가 경기 남부에서 가장 많은 도시</li>
+    <li><b>세 기능의 격리</b> — AI 기업은 판교에, 고임금 연구 일자리는 서울에 머물러 생산·활용 현장과 떨어져 있음</li>
+    <li><b>앤트로픽 아시아 본부</b>가 수원에 입지하면 연산 하드웨어 기업부터 AI를 도입할 제조기업까지 가장 가까이에서 만나는 연구개발 거점</li>
+  </ol>
+  <div class="legend">
+    <div><span class="sw" style="background:var(--sw)"></span>소프트웨어·팹리스 (판교)</div>
+    <div><span class="sw" style="background:var(--semi)"></span>반도체 생산 (경부축)</div>
+    <div><span class="sw" style="background:var(--mfg)"></span>제조업 집적지 (서해안)</div>
+    <div><span class="sw" style="background:var(--hub)"></span>R&amp;D·지식서비스 (수원)</div>
+    <div><span class="sw" style="border:1.5px dashed var(--semi)"></span>반도체 클러스터 조성 예정지</div>
+    <div><span class="ln" style="border-top:3px dotted var(--hub)"></span>수원 연계축 (제안)</div>
+    <div><span class="ln" style="border-top:1.5px dashed rgba(255,255,255,.55)"></span>현재 격리된 기능 간 관계</div>
+  </div>
+  <p class="src">채색 면: 용도지역 중 공업지역(VWorld 국토교통부 용도지역도, 2026) · 행정경계: 통계청 SGIS(2025 2Q) · 입지 위치는 도식적 표현</p>
+</aside>
+
+<div class="toggle" role="group" aria-label="배경지도">
+  <button id="bSat" aria-pressed="true">위성</button>
+  <button id="bOsm" aria-pressed="false">일반</button>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const C = {sw:'#b294ff', semi:'#3f9bff', mfg:'#2fd4b8', hub:'#ffc64a', red:'#e8473c', other:'#6d7f96'};
+
+const map = L.map('map', {zoomControl:false, attributionControl:true, zoomSnap:.25})
+  .fitBounds([[37.00,126.62],[37.50,127.33]], {paddingTopLeft:[350,20], paddingBottomRight:[20,20]});
+L.control.zoom({position:'bottomright'}).addTo(map);
+
+// 키 없는 배경지도 (Esri 위성 / OSM)
+const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  {maxZoom:18, className:'base-sat', attribution:'Imagery &copy; Esri'}).addTo(map);
+const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  {maxZoom:19, className:'base-osm', attribution:'&copy; OpenStreetMap contributors'});
+const bSat = document.getElementById('bSat'), bOsm = document.getElementById('bOsm');
+function setBase(useSat){
+  (useSat?osm:sat).remove(); (useSat?sat:osm).addTo(map).bringToBack();
+  bSat.setAttribute('aria-pressed', useSat); bOsm.setAttribute('aria-pressed', !useSat);
+}
+bSat.onclick = () => setBase(true); bOsm.onclick = () => setBase(false);
+
+// 레이어 순서
+['bands','zones','bounds','links','marks'].forEach((p,i) => { map.createPane(p).style.zIndex = 410 + i*10; });
+map.getPane('marks').style.zIndex = 650;
+
+const icon = (html, cls='') => L.divIcon({html, className:cls, iconSize:null});
+const put = (ll, html) => L.marker(ll, {icon:icon(html), pane:'marks', interactive:false}).addTo(map);
+
+// 산업 축 — 넓은 반투명 띠 (예시 이미지의 푸른 회랑)
+function band(pts, color){
+  [[46,.10],[26,.14],[10,.22]].forEach(([w,o]) =>
+    L.polyline(pts, {pane:'bands', color, weight:w, opacity:o, lineCap:'round', lineJoin:'round', interactive:false}).addTo(map));
+}
+band([[37.2440,127.0880],[37.2295,127.0800],[37.2148,127.0696],[37.1600,127.0640],[37.0950,127.0560],[37.0220,127.0480]], C.semi);
+band([[37.2295,127.0800],[37.1900,127.1500],[37.1050,127.1750]], C.semi);
+band([[37.2295,127.0800],[37.2150,127.1900],[37.1550,127.2950]], C.semi);
+band([[37.3700,126.6850],[37.3480,126.7060],[37.3137,126.7790],[37.2950,126.8250]], C.mfg);
+band([[37.4013,127.1080],[37.4115,127.0950]], C.sw);
+
+// 조성 예정 반도체 클러스터 (도식)
+[[37.1050,127.1750,'삼성전자'],[37.1550,127.2950,'SK하이닉스']].forEach(([a,b]) =>
+  L.circle([a,b], {pane:'zones', radius:2600, color:C.semi, weight:1.5, dashArray:'5 5', fillColor:C.semi, fillOpacity:.22, interactive:false}).addTo(map));
+
+Promise.all([fetch('data/sigungu.geojson').then(r=>r.json()), fetch('data/industrial_zones.geojson').then(r=>r.json())])
+.then(([cities, zones]) => {
+  // 공업지역 — 기능별 채색
+  L.geoJSON(zones, {pane:'zones', interactive:false, style:f => {
+    const b = f.properties.belt, col = C[b] || C.other;
+    return {color:col, weight:b==='other'?0.5:1, opacity:b==='other'?.5:.95, fillColor:col, fillOpacity:b==='other'?.25:.62};
+  }}).addTo(map);
+
+  // 행정경계
+  L.geoJSON(cities, {pane:'bounds', interactive:false, style:f => f.properties.city==='수원시'
+    ? {color:'#fff', weight:2.6, opacity:.95, fillColor:'#fff', fillOpacity:.07}
+    : {color:'#fff', weight:.8, opacity:.28, dashArray:'3 4', fill:false}}).addTo(map);
+  L.geoJSON(cities.features.filter(f=>f.properties.city==='수원시'), {pane:'bounds', interactive:false,
+    style:{color:C.hub, weight:12, opacity:.18, fill:false}}).addTo(map);
+
+  const skip = new Set(['수원시','성남시','평택시']); // 거점 라벨과 겹치는 시명은 별도 배치
+  cities.features.forEach(f => {
+    const p = f.properties; if (skip.has(p.city)) return;
+    put([p.lat, p.lng], `<div class="city">${p.city}</div>`);
+  });
+  put([37.2420,126.9700], '<div class="city suwon">수원시</div>');
+  put([37.3800,127.1750], '<div class="city">성남시</div>');
+  put([37.0050,126.9500], '<div class="city">평택시</div>');
+});
+
+// 삼각벨트 — 세 극과 수원 연계축
+const HUB = [37.2720,127.0150];
+const POLES = {
+  sw:   {ll:[37.4013,127.1080], t1:'AI를 만드는 곳', t2:'소프트웨어·팹리스', col:C.sw},
+  semi: {ll:[37.1400,127.0720], t1:'반도체를 만드는 곳', t2:'경부축 반도체 생산기지', col:C.semi},
+  mfg:  {ll:[37.3300,126.7420], t1:'AI를 사용할 곳', t2:'서해안 제조업 집적지', col:C.mfg},
+};
+const tri = [POLES.sw.ll, POLES.mfg.ll, POLES.semi.ll, POLES.sw.ll];
+L.polyline(tri, {pane:'links', color:'#fff', weight:1.5, opacity:.5, dashArray:'6 7', interactive:false}).addTo(map);
+Object.values(POLES).forEach(p => {
+  L.polyline([HUB, p.ll], {pane:'links', color:C.hub, weight:9, opacity:.16, interactive:false}).addTo(map);
+  L.polyline([HUB, p.ll], {pane:'links', color:C.hub, weight:3.2, opacity:.95, lineCap:'round', className:'flow', interactive:false}).addTo(map);
+});
+put([37.2950,126.8900], '<div class="lbl b" style="opacity:.75"><span class="sub">격리</span></div>');
+put([37.3450,127.1350], '<div class="lbl b" style="opacity:.75"><span class="sub">격리</span></div>');
+put([37.3720,126.9250], '<div class="lbl b" style="opacity:.75"><span class="sub">격리</span></div>');
+
+// 서울 — 고임금 연구 일자리
+put([37.4720,127.0300], `<div class="dot" style="background:#cfd8e3;color:#cfd8e3"></div>`);
+put([37.4720,127.0300], `<div class="lbl l"><span class="cat">[고임금 AI 연구 일자리]</span><span class="nm" style="color:#e4eaf1">서울</span></div>`);
+L.polyline([[37.4720,127.0300], POLES.sw.ll], {pane:'links', color:'#cfd8e3', weight:1.2, opacity:.45, dashArray:'2 5', interactive:false}).addTo(map);
+
+// 지점 라벨
+const SITES = [
+  // 판교
+  {ll:[37.4013,127.1080], col:C.sw,  pos:'r', cat:'[소프트웨어·팹리스]', nm:'판교테크노밸리', sub:'AI 기업 집적'},
+  {ll:[37.4115,127.0950], col:C.sw,  pos:'l', cat:'', nm:'제2판교', sub:''},
+  // 경부축 반도체
+  {ll:[37.2295,127.0800], col:C.semi, pos:'r', cat:'[메모리·파운드리]', nm:'삼성전자 기흥캠퍼스', sub:''},
+  {ll:[37.2148,127.0696], col:C.semi, pos:'l', cat:'[메모리·파운드리]', nm:'삼성전자 화성캠퍼스', sub:''},
+  {ll:[37.0220,127.0480], col:C.semi, pos:'r', cat:'[반도체 생산]', nm:'삼성전자 평택캠퍼스', sub:''},
+  {ll:[37.1050,127.1750], col:C.semi, pos:'b', cat:'[조성 예정]', nm:'용인 반도체 국가산단', sub:'삼성전자'},
+  {ll:[37.1550,127.2950], col:C.semi, pos:'b', cat:'[조성 예정]', nm:'용인 반도체 클러스터', sub:'SK하이닉스'},
+  // 서해안 제조
+  {ll:[37.3480,126.7060], col:C.mfg, pos:'t', cat:'[기계·금속·화학]', nm:'시화국가산업단지', sub:''},
+  {ll:[37.3137,126.7790], col:C.mfg, pos:'b', cat:'[기계·전자부품]', nm:'반월국가산업단지', sub:''},
+  // 수원
+  {ll:[37.2576,127.0531], col:C.hub, pos:'r', cat:'[R&D·지식서비스]', nm:'삼성전자 수원 디지털시티', sub:''},
+];
+SITES.forEach(s => {
+  put(s.ll, `<div class="dot" style="background:${s.col};color:${s.col}"></div>`);
+  put(s.ll, `<div class="lbl ${s.pos}">${s.cat?`<span class="cat">${s.cat}</span>`:''}<span class="nm" style="color:${s.col}">${s.nm}</span>${s.sub?`<span class="sub">${s.sub}</span>`:''}</div>`);
+});
+
+// 세 극 라벨
+const poleLbl = {sw:[37.4620,127.1350], semi:[37.1050,126.9700], mfg:[37.4020,126.7000]};
+Object.entries(POLES).forEach(([k,p]) =>
+  put(poleLbl[k], `<div class="pole"><span class="t1" style="background:${p.col}">${p.t1}</span><span class="t2">${p.t2}</span></div>`));
+
+// 제안 거점
+put(HUB, '<div class="pulse"></div>');
+put([HUB[0]+0.006, HUB[1]], '<div class="hub"><div class="box">앤트로픽 아시아 본부<small>수원 · 세 기능을 잇는 연계거점 (제안)</small></div><div class="arrow"></div></div>');
+</script>
+</body>
+</html>

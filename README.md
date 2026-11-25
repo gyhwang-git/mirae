@@ -2,8 +2,8 @@
 
 판교(소프트웨어·팹리스), 경부축(반도체 생산), 서해안(제조업 집적지)이 이루는 삼각 산업벨트와, 그 가운데 있는 수원을 연계거점으로 제안하는 내용을 그린 도식 지도입니다.
 
-- `light.html`: 흰 배경 시안. 고속도로, 수인분당선·신분당선, 산업단지 이름 포함
-- `index.html`: 어두운 위성 배경 시안 (Esri World Imagery / OSM)
+- `index.html`: 흰 배경 지도 (메인). 고속도로, 수인분당선·신분당선, 산업단지 이름, 수원시 구 경계 포함
+- `dark.html`: 초기 어두운 위성 배경 시안 (Esri World Imagery / OSM)
 
 ## 데이터
 
@@ -31,5 +31,5 @@ VWorld API 키는 상위 폴더의 `.env`(`V-WORLD_KEY`)에서 읽습니다. 키
 
 ```bash
 python -m http.server
-# http://localhost:8000/light.html
+# http://localhost:8000/
 ```

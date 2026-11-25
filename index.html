@@ -5,68 +5,67 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>수원, AI 삼각 산업벨트의 연계거점</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
 <style>
+  /* 흰 배경 시안: 육지 흰색 · 바다 옅은 회청 · 기능색은 채도 높은 잉크 톤 */
   :root{
-    --sw:#b294ff;   /* 판교 소프트웨어·팹리스 */
-    --semi:#3f9bff; /* 경부축 반도체 */
-    --mfg:#2fd4b8;  /* 서해안 제조업 */
-    --hub:#ffc64a;  /* 수원 R&D·지식서비스 */
-    --red:#e8473c;  /* 제안 거점 */
-    --ink:#eef2f7; --mute:#9aa8ba; --bg:#0b1119;
+    --sw:#0e9e86;   /* 판교 소프트웨어·팹리스 */
+    --semi:#1e6fe0; /* 경부축 반도체 */
+    --mfg:#7a56e8;  /* 서해안 제조업 */
+    --hub:#e09a00;  /* 수원 R&D·지식서비스 */
+    --red:#c4161c;  /* 제안 거점 */
+    --ink:#18212d; --mute:#6b7787; --line:#c9d1db; --sea:#e6ecf2; --land:#ffffff;
+    color-scheme:light;
   }
-  html,body{margin:0;height:100%;background:var(--bg);font-family:Pretendard,"Malgun Gothic",sans-serif;color:var(--ink)}
-  #map{position:absolute;inset:0;background:var(--bg)}
-  .leaflet-container{font-family:inherit;background:var(--bg)}
-  /* 배경지도 톤다운 — 예시 이미지처럼 어두운 위성 */
-  .base-sat{filter:grayscale(.55) saturate(.6) brightness(.42) contrast(1.15)}
-  .base-osm{filter:invert(1) grayscale(1) brightness(.72) contrast(.95)}
-  .leaflet-tile-pane::after{content:"";position:absolute;inset:-5000px;background:rgba(10,24,44,.28);pointer-events:none}
+  html,body{margin:0;height:100%;background:var(--sea);font-family:"Noto Sans KR",Pretendard,"Malgun Gothic",sans-serif;color:var(--ink)}
+  #map{position:absolute;inset:0;background:var(--sea)}
+  .leaflet-container{font-family:inherit;background:var(--sea)}
 
-  /* 지점 라벨 */
-  .lbl{position:relative;white-space:nowrap;pointer-events:auto;line-height:1.15;text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.85)}
+  .lbl{position:relative;white-space:nowrap;line-height:1.15;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff}
   .lbl .cat{display:block;font-size:11px;color:var(--mute);font-weight:500;letter-spacing:-.2px}
-  .lbl .nm{display:block;font-size:15px;font-weight:700;letter-spacing:-.4px}
-  .lbl .sub{display:block;font-size:11px;color:#c9d3df;font-weight:500}
+  .lbl .nm{display:block;font-size:15px;font-weight:800;letter-spacing:-.4px}
+  .lbl .sub{display:block;font-size:11px;color:#4a5566;font-weight:500}
   .lbl.r{transform:translate(12px,-50%)} .lbl.l{transform:translate(calc(-100% - 12px),-50%);text-align:right}
   .lbl.t{transform:translate(-50%,calc(-100% - 12px));text-align:center} .lbl.b{transform:translate(-50%,12px);text-align:center}
-  .dot{width:10px;height:10px;border-radius:50%;border:2px solid #fff;transform:translate(-50%,-50%);box-shadow:0 0 10px currentColor}
-  .city{font-size:12px;color:rgba(255,255,255,.55);font-weight:600;transform:translate(-50%,-50%);white-space:nowrap;text-shadow:0 1px 3px #000}
-  .city.suwon{font-size:17px;color:#fff;letter-spacing:2px}
-  .pole{transform:translate(-50%,-50%);text-align:center;white-space:nowrap;text-shadow:0 1px 4px #000,0 0 12px rgba(0,0,0,.9)}
-  .pole .t1{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:3px;color:#0b1119;margin-bottom:3px}
-  .pole .t2{display:block;font-size:12px;color:#dfe6ee;font-weight:500}
+  .dot{width:9px;height:9px;border-radius:50%;border:2px solid #fff;transform:translate(-50%,-50%);box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+  .city{font-size:12px;color:#97a2b0;font-weight:500;transform:translate(-50%,-50%);white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff}
+  .city.suwon{font-size:17px;color:var(--ink);font-weight:800;letter-spacing:2px}
+  .cx{transform:translate(-50%,-50%);white-space:nowrap;font-size:11px;font-weight:600;color:#2b3442;letter-spacing:-.3px;line-height:1.1;text-align:center;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 5px #fff}
+  .cx i{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:3px;vertical-align:1px}
+  .cx small{display:block;font-size:9.5px;font-weight:500;color:#7b8796}
+  .hwy{transform:translate(-50%,-50%);white-space:nowrap;font-size:10.5px;font-weight:600;color:#5b6676;background:#fff;border:1px solid #c3ccd6;border-radius:9px;padding:1px 7px}
+  .line-tag{transform:translate(-50%,-50%);white-space:nowrap;font-size:13px;font-weight:800;letter-spacing:-.3px;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 5px #fff,0 0 6px #fff}
+  .grp{transform:translate(-50%,-50%);white-space:nowrap;font-size:19px;font-weight:800;letter-spacing:-.5px;border-bottom:2px solid currentColor;padding:0 2px 1px;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 5px #fff}
+  .gu{transform:translate(-50%,-50%);white-space:nowrap;font-size:11.5px;font-weight:600;color:#5b4a1e;letter-spacing:1px;text-shadow:0 0 3px #fff,0 0 3px #fff}
+  .pole{transform:translate(-50%,-50%);text-align:center;white-space:nowrap}
+  .pole .t1{display:inline-block;font-size:16px;font-weight:800;padding:4px 12px;border-radius:3px;color:#fff;margin-bottom:3px}
+  .pole .t2{display:block;font-size:19px;font-weight:800;letter-spacing:-.5px;margin-top:2px;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff,0 0 8px #fff}
 
-  /* 제안 거점 */
-  .hub{transform:translate(-50%,-100%);text-align:center}
-  .hub .box{background:var(--red);color:#fff;font-weight:800;font-size:16px;padding:7px 12px;border-radius:3px;white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.6)}
-  .hub .box small{display:block;font-size:11px;font-weight:600;opacity:.9;margin-top:2px}
-  .hub .arrow{width:0;height:0;margin:0 auto;border-left:12px solid transparent;border-right:12px solid transparent;border-top:20px solid var(--red)}
-  .pulse{width:16px;height:16px;border-radius:50%;background:var(--red);transform:translate(-50%,-50%);box-shadow:0 0 0 0 rgba(232,71,60,.7);animation:pulse 2s infinite}
-  @keyframes pulse{70%{box-shadow:0 0 0 22px rgba(232,71,60,0)}100%{box-shadow:0 0 0 0 rgba(232,71,60,0)}}
+  .hub{display:flex;align-items:flex-start;transform:translate(calc(-100% - 12px),-11px)}
+  .hub .box{border-top-right-radius:0}
+  .hub .box{background:var(--red);color:#fff;font-weight:800;font-size:16px;padding:7px 12px;border-radius:3px;white-space:nowrap;box-shadow:0 4px 14px rgba(196,22,28,.3)}
+  .hub .box small{display:block;font-size:11px;font-weight:600;opacity:.92;margin-top:2px}
+  .hub .arrow{width:0;height:0;border-top:11px solid transparent;border-bottom:11px solid transparent;border-left:16px solid var(--red)}
+  .pulse{width:16px;height:16px;border-radius:50%;background:var(--red);border:2px solid #fff;transform:translate(-50%,-50%);box-shadow:0 0 0 0 rgba(196,22,28,.55);animation:pulse 2s infinite}
+  @keyframes pulse{70%{box-shadow:0 0 0 22px rgba(196,22,28,0)}100%{box-shadow:0 0 0 0 rgba(196,22,28,0)}}
   .flow{stroke-dasharray:2 12;animation:flow 1.2s linear infinite}
   @keyframes flow{to{stroke-dashoffset:-28}}
   @media (prefers-reduced-motion:reduce){.pulse,.flow{animation:none}}
 
-  /* 패널 */
-  .panel{position:absolute;z-index:1000;left:18px;top:18px;width:330px;max-height:calc(100% - 36px);overflow:auto;background:rgba(11,17,25,.86);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:18px 20px;box-sizing:border-box}
+  .panel{position:absolute;z-index:1000;left:18px;top:18px;width:330px;max-height:calc(100% - 36px);overflow:auto;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:6px;padding:18px 20px;box-sizing:border-box;box-shadow:0 6px 24px rgba(24,33,45,.08)}
   .panel h1{margin:0 0 4px;font-size:20px;letter-spacing:-.6px;line-height:1.3}
   .panel h1 em{font-style:normal;color:var(--red)}
   .panel .lead{margin:0 0 14px;font-size:12.5px;color:var(--mute);line-height:1.55}
   .panel ol{margin:0 0 14px;padding:0;list-style:none;counter-reset:n}
-  .panel li{counter-increment:n;position:relative;padding-left:24px;margin-bottom:9px;font-size:12.5px;line-height:1.55;color:#d5dde7}
-  .panel li::before{content:counter(n);position:absolute;left:0;top:1px;width:17px;height:17px;border-radius:50%;background:rgba(255,255,255,.12);font-size:11px;font-weight:700;text-align:center;line-height:17px}
-  .panel li b{color:#fff}
-  .legend{border-top:1px solid rgba(255,255,255,.1);padding-top:12px;display:grid;gap:6px;font-size:12px;color:#d5dde7}
+  .panel li{counter-increment:n;position:relative;padding-left:24px;margin-bottom:9px;font-size:12.5px;line-height:1.55;color:#3b4656}
+  .panel li::before{content:counter(n);position:absolute;left:0;top:1px;width:17px;height:17px;border-radius:50%;background:#eef1f5;color:var(--ink);font-size:11px;font-weight:700;text-align:center;line-height:17px}
+  .panel li b{color:var(--ink)}
+  .legend{border-top:1px solid var(--line);padding-top:12px;display:grid;gap:6px;font-size:12px;color:#3b4656}
   .legend div{display:flex;align-items:center;gap:8px}
   .sw{width:16px;height:11px;border-radius:2px;flex:none}
   .ln{width:22px;height:0;flex:none}
-  .src{margin-top:12px;font-size:10.5px;color:#6f7d8f;line-height:1.5}
-  .toggle{position:absolute;z-index:1000;right:14px;top:14px;display:flex;background:rgba(11,17,25,.86);border:1px solid rgba(255,255,255,.1);border-radius:5px;overflow:hidden}
-  .toggle button{all:unset;cursor:pointer;font-size:12px;padding:6px 10px;color:var(--mute)}
-  .toggle button[aria-pressed=true]{background:rgba(255,255,255,.12);color:#fff}
-  .leaflet-control-attribution{background:rgba(11,17,25,.7)!important;color:#7d8a9b!important;font-size:10px}
-  .leaflet-control-attribution a{color:#9fb0c4!important}
+  .src{margin-top:12px;font-size:10.5px;color:#8b96a5;line-height:1.5}
+  .leaflet-control-attribution{background:rgba(255,255,255,.8)!important;color:#8b96a5!important;font-size:10px}
   @media (max-width:700px){.panel{width:auto;right:12px;left:12px;top:auto;bottom:12px;max-height:42%}}
 </style>
 </head>
@@ -88,136 +87,177 @@
     <div><span class="sw" style="background:var(--mfg)"></span>제조업 집적지 (서해안)</div>
     <div><span class="sw" style="background:var(--hub)"></span>R&amp;D·지식서비스 (수원)</div>
     <div><span class="sw" style="border:1.5px dashed var(--semi)"></span>반도체 클러스터 조성 예정지</div>
-    <div><span class="ln" style="border-top:3px dotted var(--hub)"></span>수원 연계축 (제안)</div>
-    <div><span class="ln" style="border-top:1.5px dashed rgba(255,255,255,.55)"></span>현재 격리된 기능 간 관계</div>
+    <div><span class="sw" style="border:1px dashed #5b6676"></span>산업단지 경계 · 이름 (확대하면 더 표시)</div>
+    <div><span class="ln" style="border-top:3px dotted var(--red)"></span>수원 연계축 (제안)</div>
+    <div><span class="ln" style="border-top:3.5px solid #f2b600"></span>수인분당선</div>
+    <div><span class="ln" style="border-top:3.5px solid #b0174a"></span>신분당선</div>
+    <div><span class="ln" style="border-top:2.5px solid #ccd3dc"></span>고속도로</div>
+    <div><span class="ln" style="border-top:1.5px dashed #8b96a5"></span>현재 격리된 기능 간 관계</div>
   </div>
-  <p class="src">채색 면: 용도지역 중 공업지역(VWorld 국토교통부 용도지역도, 2026) · 행정경계: 통계청 SGIS(2025 2Q) · 입지 위치는 도식적 표현</p>
+  <p class="src">채색 면: 용도지역 중 공업지역(VWorld 국토교통부 용도지역도, 2026) · 산업단지 경계·명칭: VWorld 산업단지 경계 · 고속도로: VWorld 국가교통DB 링크 · 철도: 역 위치를 이은 도식선 · 행정경계·해안선: 통계청 SGIS(2025 2Q) · 입지 위치는 도식적 표현</p>
 </aside>
-
-<div class="toggle" role="group" aria-label="배경지도">
-  <button id="bSat" aria-pressed="true">위성</button>
-  <button id="bOsm" aria-pressed="false">일반</button>
-</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const C = {sw:'#b294ff', semi:'#3f9bff', mfg:'#2fd4b8', hub:'#ffc64a', red:'#e8473c', other:'#6d7f96'};
+const C = {sw:'#0e9e86', semi:'#1e6fe0', mfg:'#7a56e8', hub:'#e09a00', red:'#c4161c', other:'#a9b4c2'};
 
-const map = L.map('map', {zoomControl:false, attributionControl:true, zoomSnap:.25})
+const map = L.map('map', {zoomControl:false, zoomSnap:.25, minZoom:9, maxZoom:15})
   .fitBounds([[37.00,126.62],[37.50,127.33]], {paddingTopLeft:[350,20], paddingBottomRight:[20,20]});
 L.control.zoom({position:'bottomright'}).addTo(map);
+map.attributionControl.addAttribution('경계 &copy; 통계청 SGIS · 용도지역 &copy; VWorld');
 
-// 키 없는 배경지도 (Esri 위성 / OSM)
-const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  {maxZoom:18, className:'base-sat', attribution:'Imagery &copy; Esri'}).addTo(map);
-const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-  {maxZoom:19, className:'base-osm', attribution:'&copy; OpenStreetMap contributors'});
-const bSat = document.getElementById('bSat'), bOsm = document.getElementById('bOsm');
-function setBase(useSat){
-  (useSat?osm:sat).remove(); (useSat?sat:osm).addTo(map).bringToBack();
-  bSat.setAttribute('aria-pressed', useSat); bOsm.setAttribute('aria-pressed', !useSat);
-}
-bSat.onclick = () => setBase(true); bOsm.onclick = () => setBase(false);
-
-// 레이어 순서
-['bands','zones','bounds','links','marks'].forEach((p,i) => { map.createPane(p).style.zIndex = 410 + i*10; });
+['land','roads','bands','zones','bounds','rail','links','marks'].forEach((p,i) => { map.createPane(p).style.zIndex = 400 + i*10; });
+const RAIL = {'신분당선':'#b0174a', '수인분당선':'#f2b600'};
 map.getPane('marks').style.zIndex = 650;
 
-const icon = (html, cls='') => L.divIcon({html, className:cls, iconSize:null});
+const icon = html => L.divIcon({html, className:'', iconSize:null});
 const put = (ll, html) => L.marker(ll, {icon:icon(html), pane:'marks', interactive:false}).addTo(map);
 
-// 산업 축 — 넓은 반투명 띠 (예시 이미지의 푸른 회랑)
 function band(pts, color){
-  [[46,.10],[26,.14],[10,.22]].forEach(([w,o]) =>
+  [[44,.07],[24,.10],[9,.16]].forEach(([w,o]) =>
     L.polyline(pts, {pane:'bands', color, weight:w, opacity:o, lineCap:'round', lineJoin:'round', interactive:false}).addTo(map));
 }
 band([[37.2440,127.0880],[37.2295,127.0800],[37.2148,127.0696],[37.1600,127.0640],[37.0950,127.0560],[37.0220,127.0480]], C.semi);
-band([[37.2295,127.0800],[37.1900,127.1500],[37.1050,127.1750]], C.semi);
-band([[37.2295,127.0800],[37.2150,127.1900],[37.1550,127.2950]], C.semi);
+band([[37.2295,127.0800],[37.1513,127.2060]], C.semi);
+band([[37.2295,127.0800],[37.1521,127.3189]], C.semi);
 band([[37.3700,126.6850],[37.3480,126.7060],[37.3137,126.7790],[37.2950,126.8250]], C.mfg);
-band([[37.4013,127.1080],[37.4115,127.0950]], C.sw);
+band([[37.4013,127.1080],[37.4115,127.0950],[37.4140,127.0830]], C.sw);
 
-// 조성 예정 반도체 클러스터 (도식)
-[[37.1050,127.1750,'삼성전자'],[37.1550,127.2950,'SK하이닉스']].forEach(([a,b]) =>
-  L.circle([a,b], {pane:'zones', radius:2600, color:C.semi, weight:1.5, dashArray:'5 5', fillColor:C.semi, fillOpacity:.22, interactive:false}).addTo(map));
+// 지도에 직접 라벨을 단 단지 (자동 라벨에서 제외)
+const MANUAL = new Set(['반월특수(시화)','반월특수(안산신도시)','고덕','화성','용인첨단시스템반도체','용인반도체클러스터','판교제2테크노밸리']);
+const PLANNED = new Set(['용인첨단시스템반도체','용인반도체클러스터']);
 
-Promise.all([fetch('data/sigungu.geojson').then(r=>r.json()), fetch('data/industrial_zones.geojson').then(r=>r.json())])
-.then(([cities, zones]) => {
-  // 공업지역 — 기능별 채색
+Promise.all(['data/land.geojson','data/sigungu.geojson','data/industrial_zones.geojson','data/complexes.geojson','data/highways.geojson','data/rail.geojson','data/stations.geojson','data/suwon_gu.geojson'].map(u => fetch(u).then(r=>r.json())))
+.then(([land, cities, zones, cx, hw, rail, stns, gu]) => {
+  L.geoJSON(land, {pane:'land', interactive:false, style:{color:'#b9c4d0', weight:.8, fillColor:'#fff', fillOpacity:1}}).addTo(map);
+
+  // 고속도로 — 흰 테두리 + 회색 본선
+  L.geoJSON(hw, {pane:'roads', interactive:false, style:{color:'#fff', weight:4, opacity:1}}).addTo(map);
+  L.geoJSON(hw, {pane:'roads', interactive:false, style:{color:'#ccd3dc', weight:1.8, opacity:1}}).addTo(map);
+
+  // 철도 — 수인분당선 · 신분당선
+  L.geoJSON(rail, {pane:'rail', interactive:false, style:{color:'#fff', weight:6.5, opacity:.9}}).addTo(map);
+  L.geoJSON(rail, {pane:'rail', interactive:false, style:f => ({color:RAIL[f.properties.line], weight:3.6, opacity:1})}).addTo(map);
+  const stnLayer = L.layerGroup(stns.features.map(f => L.circleMarker([f.geometry.coordinates[1], f.geometry.coordinates[0]],
+    {pane:'rail', radius:2.6, weight:1.6, color:RAIL[f.properties.line], fillColor:'#fff', fillOpacity:1, interactive:false})));
+  const showStn = () => map.getZoom() >= 11 ? stnLayer.addTo(map) : stnLayer.remove();
+  map.on('zoomend', showStn); showStn();
+  put([37.3270,127.0700], `<div class="line-tag" style="color:${RAIL['신분당선']}">신분당선</div>`);
+  put([37.2050,126.9150], `<div class="line-tag" style="color:#c99600">수인분당선</div>`);
+
+  // 고속도로 이름 — 지도 범위 안 구간의 가운데 지점
+  const view = L.latLngBounds([[37.00,126.66],[37.50,127.33]]);
+  const hwLabels = hw.features.map(f => {
+    const g = f.geometry, parts = g.type === 'LineString' ? [g.coordinates] : g.coordinates;
+    const inView = parts.flat().filter(([x,y]) => view.contains([y,x]));
+    if (inView.length < 4) return null;
+    const [x,y] = inView[Math.floor(inView.length/2)];
+    return L.marker([y,x], {pane:'marks', interactive:false, icon:icon(`<div class="hwy">${f.properties.name}</div>`)}).addTo(map);
+  }).filter(Boolean);
+
   L.geoJSON(zones, {pane:'zones', interactive:false, style:f => {
     const b = f.properties.belt, col = C[b] || C.other;
-    return {color:col, weight:b==='other'?0.5:1, opacity:b==='other'?.5:.95, fillColor:col, fillOpacity:b==='other'?.25:.62};
+    return {color:col, weight:b==='other'?0.4:.8, opacity:b==='other'?.6:1, fillColor:col, fillOpacity:b==='other'?.35:.75};
   }}).addTo(map);
 
-  // 행정경계
   L.geoJSON(cities, {pane:'bounds', interactive:false, style:f => f.properties.city==='수원시'
-    ? {color:'#fff', weight:2.6, opacity:.95, fillColor:'#fff', fillOpacity:.07}
-    : {color:'#fff', weight:.8, opacity:.28, dashArray:'3 4', fill:false}}).addTo(map);
+    ? {color:'#18212d', weight:2.4, opacity:.9, fillColor:C.hub, fillOpacity:.08}
+    : {color:'#9aa6b4', weight:.8, opacity:.7, dashArray:'3 4', fill:false}}).addTo(map);
   L.geoJSON(cities.features.filter(f=>f.properties.city==='수원시'), {pane:'bounds', interactive:false,
-    style:{color:C.hub, weight:12, opacity:.18, fill:false}}).addTo(map);
+    style:{color:C.hub, weight:10, opacity:.18, fill:false}}).addTo(map);
 
-  const skip = new Set(['수원시','성남시','평택시']); // 거점 라벨과 겹치는 시명은 별도 배치
+  // 수원시 내부 구 경계·구명
+  L.geoJSON(gu, {pane:'bounds', interactive:false, style:{color:'#18212d', weight:1, opacity:.45, dashArray:'4 3', fill:false}}).addTo(map);
+  const GU_POS = {'권선구':[37.2330,126.9900], '팔달구':[37.2660,127.0210], '영통구':[37.2930,127.0640]};  // 거점 박스·시명과 겹치지 않게 조정
+  gu.features.forEach(f => {
+    const p = f.properties, ll = GU_POS[p.gu] || [p.lat, p.lng];
+    put(ll, `<div class="gu">${p.gu}</div>`);
+  });
+
+  const skip = new Set(['수원시','성남시','평택시']);
   cities.features.forEach(f => {
     const p = f.properties; if (skip.has(p.city)) return;
     put([p.lat, p.lng], `<div class="city">${p.city}</div>`);
   });
-  put([37.2420,126.9700], '<div class="city suwon">수원시</div>');
+  put([37.2804,127.0078], '<div class="city suwon">수원시</div>');
   put([37.3800,127.1750], '<div class="city">성남시</div>');
   put([37.0050,126.9500], '<div class="city">평택시</div>');
+
+  // 산업단지 경계 (VWorld 산업단지 경계)
+  L.geoJSON(cx, {pane:'zones', interactive:false, style:f => PLANNED.has(f.properties.dan_name)
+    ? {color:C.semi, weight:1.6, dashArray:'5 4', fillColor:C.semi, fillOpacity:.14}
+    : {color:'#5b6676', weight:.7, opacity:.55, dashArray:'2 3', fill:false}}).addTo(map);
+
+  // 산업단지 이름 — 면적 큰 순으로 놓고 겹치면 숨김
+  const cxLabels = cx.features
+    .filter(f => !MANUAL.has(f.properties.dan_name))
+    .map(f => {
+      const p = f.properties;
+      return L.marker([p.lat, p.lng], {pane:'marks', interactive:false, icon:icon(
+        `<div class="cx"><i style="background:${C[p.belt]||'#8b96a5'}"></i>${p.dan_name}<small>${p.cat_nam}</small></div>`)}).addTo(map);
+    });
+  function declutter(){
+    const hit = (a,b) => !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+    const taken = [...document.querySelectorAll('.panel,.lbl,.pole,.hub .box,.city,.line-tag,.grp,.gu')].map(e => e.getBoundingClientRect());
+    const vw = innerWidth, vh = innerHeight;
+    [...hwLabels, ...cxLabels].forEach(m => {
+      const el = m.getElement().firstElementChild; el.style.visibility = 'visible';
+      const r = el.getBoundingClientRect();
+      const out = r.right < 0 || r.left > vw || r.bottom < 0 || r.top > vh;
+      const pad = {left:r.left-3, right:r.right+3, top:r.top-2, bottom:r.bottom+2};
+      if (out || taken.some(t => hit(pad, t))) { el.style.visibility = 'hidden'; return; }
+      taken.push(pad);
+    });
+  }
+  requestAnimationFrame(declutter);
+  map.on('zoomend moveend', declutter);
 });
 
-// 삼각벨트 — 세 극과 수원 연계축
-const HUB = [37.2720,127.0150];
+const HUB = [37.2606,126.9824];  // 서울대학교 농업생명과학대학 수원수목원
 const POLES = {
   sw:   {ll:[37.4013,127.1080], t1:'AI를 만드는 곳', t2:'소프트웨어·팹리스', col:C.sw},
   semi: {ll:[37.1400,127.0720], t1:'반도체를 만드는 곳', t2:'경부축 반도체 생산기지', col:C.semi},
   mfg:  {ll:[37.3300,126.7420], t1:'AI를 사용할 곳', t2:'서해안 제조업 집적지', col:C.mfg},
 };
-const tri = [POLES.sw.ll, POLES.mfg.ll, POLES.semi.ll, POLES.sw.ll];
-L.polyline(tri, {pane:'links', color:'#fff', weight:1.5, opacity:.5, dashArray:'6 7', interactive:false}).addTo(map);
+L.polyline([POLES.sw.ll, POLES.mfg.ll, POLES.semi.ll, POLES.sw.ll], {pane:'links', color:'#6b7787', weight:1.4, opacity:.7, dashArray:'6 7', interactive:false}).addTo(map);
 Object.values(POLES).forEach(p => {
-  L.polyline([HUB, p.ll], {pane:'links', color:C.hub, weight:9, opacity:.16, interactive:false}).addTo(map);
-  L.polyline([HUB, p.ll], {pane:'links', color:C.hub, weight:3.2, opacity:.95, lineCap:'round', className:'flow', interactive:false}).addTo(map);
+  L.polyline([HUB, p.ll], {pane:'links', color:C.red, weight:9, opacity:.12, interactive:false}).addTo(map);
+  L.polyline([HUB, p.ll], {pane:'links', color:C.red, weight:3.2, opacity:1, lineCap:'round', className:'flow', interactive:false}).addTo(map);
 });
-put([37.2950,126.8900], '<div class="lbl b" style="opacity:.75"><span class="sub">격리</span></div>');
-put([37.3450,127.1350], '<div class="lbl b" style="opacity:.75"><span class="sub">격리</span></div>');
-put([37.3720,126.9250], '<div class="lbl b" style="opacity:.75"><span class="sub">격리</span></div>');
+[[37.2950,126.8900],[37.3450,127.1350],[37.3720,126.9250]].forEach(ll =>
+  put(ll, '<div class="lbl b"><span class="sub" style="color:#6b7787">격리</span></div>'));
 
-// 서울 — 고임금 연구 일자리
-put([37.4720,127.0300], `<div class="dot" style="background:#cfd8e3;color:#cfd8e3"></div>`);
-put([37.4720,127.0300], `<div class="lbl l"><span class="cat">[고임금 AI 연구 일자리]</span><span class="nm" style="color:#e4eaf1">서울</span></div>`);
-L.polyline([[37.4720,127.0300], POLES.sw.ll], {pane:'links', color:'#cfd8e3', weight:1.2, opacity:.45, dashArray:'2 5', interactive:false}).addTo(map);
+put([37.4720,127.0300], '<div class="dot" style="background:#5b6676"></div>');
+put([37.4720,127.0300], '<div class="lbl l"><span class="cat">[고임금 AI 연구 일자리]</span><span class="nm" style="color:#3b4656">서울</span></div>');
+L.polyline([[37.4720,127.0300], POLES.sw.ll], {pane:'links', color:'#5b6676', weight:1.2, opacity:.6, dashArray:'2 5', interactive:false}).addTo(map);
 
-// 지점 라벨
 const SITES = [
-  // 판교
-  {ll:[37.4013,127.1080], col:C.sw,  pos:'r', cat:'[소프트웨어·팹리스]', nm:'판교테크노밸리', sub:'AI 기업 집적'},
-  {ll:[37.4115,127.0950], col:C.sw,  pos:'l', cat:'', nm:'제2판교', sub:''},
-  // 경부축 반도체
+  {ll:[37.4013,127.1080], col:C.sw,  pos:'r', cat:'[소프트웨어·팹리스]', nm:'제1판교', sub:'AI 기업 집적'},
+  {ll:[37.4115,127.0950], col:C.sw,  pos:'t', cat:'', nm:'제2판교', sub:''},
+  {ll:[37.4140,127.0830], col:C.sw,  pos:'l', cat:'[조성 예정]', nm:'제3판교', sub:''},
   {ll:[37.2295,127.0800], col:C.semi, pos:'r', cat:'[메모리·파운드리]', nm:'삼성전자 기흥캠퍼스', sub:''},
   {ll:[37.2148,127.0696], col:C.semi, pos:'l', cat:'[메모리·파운드리]', nm:'삼성전자 화성캠퍼스', sub:''},
   {ll:[37.0220,127.0480], col:C.semi, pos:'r', cat:'[반도체 생산]', nm:'삼성전자 평택캠퍼스', sub:''},
-  {ll:[37.1050,127.1750], col:C.semi, pos:'b', cat:'[조성 예정]', nm:'용인 반도체 국가산단', sub:'삼성전자'},
-  {ll:[37.1550,127.2950], col:C.semi, pos:'b', cat:'[조성 예정]', nm:'용인 반도체 클러스터', sub:'SK하이닉스'},
-  // 서해안 제조
+  {ll:[37.1513,127.2060], col:C.semi, pos:'b', cat:'[조성 예정]', nm:'용인첨단시스템반도체 국가산단', sub:'삼성전자'},
+  {ll:[37.1521,127.3189], col:C.semi, pos:'t', cat:'[조성 예정]', nm:'용인반도체클러스터 일반산단', sub:'SK하이닉스'},
   {ll:[37.3480,126.7060], col:C.mfg, pos:'t', cat:'[기계·금속·화학]', nm:'시화국가산업단지', sub:''},
   {ll:[37.3137,126.7790], col:C.mfg, pos:'b', cat:'[기계·전자부품]', nm:'반월국가산업단지', sub:''},
-  // 수원
   {ll:[37.2576,127.0531], col:C.hub, pos:'r', cat:'[R&D·지식서비스]', nm:'삼성전자 수원 디지털시티', sub:''},
 ];
 SITES.forEach(s => {
-  put(s.ll, `<div class="dot" style="background:${s.col};color:${s.col}"></div>`);
+  put(s.ll, `<div class="dot" style="background:${s.col}"></div>`);
   put(s.ll, `<div class="lbl ${s.pos}">${s.cat?`<span class="cat">${s.cat}</span>`:''}<span class="nm" style="color:${s.col}">${s.nm}</span>${s.sub?`<span class="sub">${s.sub}</span>`:''}</div>`);
 });
 
-// 세 극 라벨
-const poleLbl = {sw:[37.4620,127.1350], semi:[37.1050,126.9700], mfg:[37.4020,126.7000]};
-Object.entries(POLES).forEach(([k,p]) =>
-  put(poleLbl[k], `<div class="pole"><span class="t1" style="background:${p.col}">${p.t1}</span><span class="t2">${p.t2}</span></div>`));
+// 판교 세 지구를 묶는 상단 라벨
+put([37.4420,127.0950], `<div class="grp" style="color:${C.sw}">판교 테크노밸리</div>`);
 
-// 제안 거점
+const poleLbl = {sw:[37.4880,127.1550], semi:[37.1050,126.9700], mfg:[37.4020,126.7000]};
+Object.entries(POLES).forEach(([k,p]) =>
+  put(poleLbl[k], `<div class="pole"><span class="t1" style="background:${p.col}">${p.t1}</span><span class="t2" style="color:${p.col}">${p.t2}</span></div>`));
+
 put(HUB, '<div class="pulse"></div>');
-put([HUB[0]+0.006, HUB[1]], '<div class="hub"><div class="box">앤트로픽 아시아 본부<small>수원 · 세 기능을 잇는 연계거점 (제안)</small></div><div class="arrow"></div></div>');
+put(HUB, '<div class="hub"><div class="box">앤트로픽 아시아 본부<small>세 기능을 잇는 연계거점 (제안)</small></div><div class="arrow"></div></div>');
 </script>
 </body>
 </html>
