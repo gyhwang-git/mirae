@@ -35,7 +35,8 @@
   .cx small{display:block;font-size:9.5px;font-weight:500;color:#7b8796}
   .hwy{transform:translate(-50%,-50%);white-space:nowrap;font-size:10.5px;font-weight:600;color:#5b6676;background:#fff;border:1px solid #c3ccd6;border-radius:9px;padding:1px 7px}
   .line-tag{transform:translate(-50%,-50%);white-space:nowrap;font-size:12px;font-weight:800;color:#fff;padding:3px 8px;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.18)}
-  .grp{transform:translate(-50%,-50%);white-space:nowrap;font-size:13px;font-weight:800;letter-spacing:-.3px;border-bottom:1.5px solid currentColor;padding:0 2px 1px;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 5px #fff}
+  .grp{transform:translate(-50%,-50%);white-space:nowrap;font-size:19px;font-weight:800;letter-spacing:-.5px;border-bottom:2px solid currentColor;padding:0 2px 1px;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 5px #fff}
+  .gu{transform:translate(-50%,-50%);white-space:nowrap;font-size:11.5px;font-weight:600;color:#5b4a1e;letter-spacing:1px;text-shadow:0 0 3px #fff,0 0 3px #fff}
   .pole{transform:translate(-50%,-50%);text-align:center;white-space:nowrap}
   .pole .t1{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:3px;color:#fff;margin-bottom:3px}
   .pole .t2{display:block;font-size:12px;color:#3b4656;font-weight:600;text-shadow:0 0 3px #fff,0 0 3px #fff}
@@ -126,8 +127,8 @@ band([[37.4013,127.1080],[37.4115,127.0950],[37.4140,127.0830]], C.sw);
 const MANUAL = new Set(['반월특수(시화)','반월특수(안산신도시)','고덕','화성','용인첨단시스템반도체','용인반도체클러스터','판교제2테크노밸리']);
 const PLANNED = new Set(['용인첨단시스템반도체','용인반도체클러스터']);
 
-Promise.all(['data/land.geojson','data/sigungu.geojson','data/industrial_zones.geojson','data/complexes.geojson','data/highways.geojson','data/rail.geojson','data/stations.geojson'].map(u => fetch(u).then(r=>r.json())))
-.then(([land, cities, zones, cx, hw, rail, stns]) => {
+Promise.all(['data/land.geojson','data/sigungu.geojson','data/industrial_zones.geojson','data/complexes.geojson','data/highways.geojson','data/rail.geojson','data/stations.geojson','data/suwon_gu.geojson'].map(u => fetch(u).then(r=>r.json())))
+.then(([land, cities, zones, cx, hw, rail, stns, gu]) => {
   L.geoJSON(land, {pane:'land', interactive:false, style:{color:'#b9c4d0', weight:.8, fillColor:'#fff', fillOpacity:1}}).addTo(map);
 
   // 고속도로 — 흰 테두리 + 회색 본선
@@ -165,6 +166,14 @@ Promise.all(['data/land.geojson','data/sigungu.geojson','data/industrial_zones.g
   L.geoJSON(cities.features.filter(f=>f.properties.city==='수원시'), {pane:'bounds', interactive:false,
     style:{color:C.hub, weight:10, opacity:.18, fill:false}}).addTo(map);
 
+  // 수원시 내부 구 경계·구명
+  L.geoJSON(gu, {pane:'bounds', interactive:false, style:{color:'#18212d', weight:1, opacity:.45, dashArray:'4 3', fill:false}}).addTo(map);
+  const GU_POS = {'권선구':[37.2330,126.9900], '팔달구':[37.2660,127.0210], '영통구':[37.2930,127.0640]};  // 거점 박스·시명과 겹치지 않게 조정
+  gu.features.forEach(f => {
+    const p = f.properties, ll = GU_POS[p.gu] || [p.lat, p.lng];
+    put(ll, `<div class="gu">${p.gu}</div>`);
+  });
+
   const skip = new Set(['수원시','성남시','평택시']);
   cities.features.forEach(f => {
     const p = f.properties; if (skip.has(p.city)) return;
@@ -189,7 +198,7 @@ Promise.all(['data/land.geojson','data/sigungu.geojson','data/industrial_zones.g
     });
   function declutter(){
     const hit = (a,b) => !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
-    const taken = [...document.querySelectorAll('.panel,.lbl,.pole,.hub .box,.city,.line-tag,.grp')].map(e => e.getBoundingClientRect());
+    const taken = [...document.querySelectorAll('.panel,.lbl,.pole,.hub .box,.city,.line-tag,.grp,.gu')].map(e => e.getBoundingClientRect());
     const vw = innerWidth, vh = innerHeight;
     [...hwLabels, ...cxLabels].forEach(m => {
       const el = m.getElement().firstElementChild; el.style.visibility = 'visible';
@@ -204,7 +213,7 @@ Promise.all(['data/land.geojson','data/sigungu.geojson','data/industrial_zones.g
   map.on('zoomend moveend', declutter);
 });
 
-const HUB = [37.2600,127.0200];
+const HUB = [37.2606,126.9824];  // 서울대학교 농업생명과학대학 수원수목원
 const POLES = {
   sw:   {ll:[37.4013,127.1080], t1:'AI를 만드는 곳', t2:'소프트웨어·팹리스', col:C.sw},
   semi: {ll:[37.1400,127.0720], t1:'반도체를 만드는 곳', t2:'경부축 반도체 생산기지', col:C.semi},
@@ -241,14 +250,14 @@ SITES.forEach(s => {
 });
 
 // 판교 세 지구를 묶는 상단 라벨
-put([37.4380,127.0950], `<div class="grp" style="color:${C.sw}">판교 테크노밸리</div>`);
+put([37.4420,127.0950], `<div class="grp" style="color:${C.sw}">판교 테크노밸리</div>`);
 
-const poleLbl = {sw:[37.4620,127.1350], semi:[37.1050,126.9700], mfg:[37.4020,126.7000]};
+const poleLbl = {sw:[37.4880,127.1550], semi:[37.1050,126.9700], mfg:[37.4020,126.7000]};
 Object.entries(POLES).forEach(([k,p]) =>
   put(poleLbl[k], `<div class="pole"><span class="t1" style="background:${p.col}">${p.t1}</span><span class="t2">${p.t2}</span></div>`));
 
 put(HUB, '<div class="pulse"></div>');
-put(HUB, '<div class="hub"><div class="box">앤트로픽 아시아 본부<small>수원 · 세 기능을 잇는 연계거점 (제안)</small></div><div class="arrow"></div></div>');
+put(HUB, '<div class="hub"><div class="box">앤트로픽 아시아 본부<small>세 기능을 잇는 연계거점 (제안)</small></div><div class="arrow"></div></div>');
 </script>
 </body>
 </html>

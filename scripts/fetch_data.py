@@ -82,6 +82,21 @@ def export_sigungu():
     print("cities:", len(g))
 
 
+def export_suwon_gu():
+    """수원시 4개 구 경계·라벨점 -> data/suwon_gu.geojson."""
+    shp = ROOT.parent / "lecture04_spatial_data_analysis/bnd_all_00_2025_2Q/bnd_all_00_2025_2Q/bnd_sigungu_00_2025_2Q.shp"
+    g = gpd.read_file(shp, encoding="utf-8")
+    g = g[g.SIGUNGU_CD.isin(["31011", "31012", "31013", "31014"])].to_crs(5179)
+    g["gu"] = g.SIGUNGU_NM.str.split(" ").str[-1]
+    g["geometry"] = g.simplify(30)
+    lp = g.representative_point().to_crs(4326)
+    g = g.to_crs(4326)
+    g["lat"], g["lng"] = lp.y.round(4), lp.x.round(4)
+    g["geometry"] = g.geometry.set_precision(1e-5)
+    g[["gu", "lat", "lng", "geometry"]].to_file(DATA / "suwon_gu.geojson", driver="GeoJSON")
+    print(g[["gu", "lat", "lng"]].to_string())
+
+
 BELT = {  # 삼각 산업벨트 기능 구분
     "안산시": "mfg", "시흥시": "mfg",
     "화성시": "semi", "평택시": "semi", "용인시": "semi", "오산시": "semi",
@@ -245,6 +260,7 @@ if __name__ == "__main__":
         sys.exit()
     fetch_industrial(k)
     export_sigungu()
+    export_suwon_gu()
     tag_zones()
     fetch_complexes(k)
     fetch_highways(k)
